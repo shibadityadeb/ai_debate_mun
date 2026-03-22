@@ -1,7 +1,6 @@
 import React from 'react'
-import { BarChart3, Gavel, Layers3, Vote } from 'lucide-react'
+import { BarChart3, Gavel } from 'lucide-react'
 import { GlassPanel } from './ui'
-import { mockMcpContext } from '../data/mockData'
 
 const phaseDescriptions = {
   idle: 'Ready to brief delegates and launch the next moderated session.',
@@ -10,17 +9,14 @@ const phaseDescriptions = {
   'rebuttal-1': 'Delegates are testing each other’s claims and probing weak assumptions.',
   'rebuttal-2': 'Counter-positioning is escalating as blocs refine coalition strategy.',
   resolution: 'Key motions and compromise language are being synthesized.',
-  voting: 'Votes are being tallied with alignment shifts across delegations.',
+  voting: 'Delegates are aligning around the moderator-led draft resolution.',
   judging: 'Judge analysis is complete with winner selection and reasoning.',
   error: 'The room needs attention before the next simulation can proceed.',
 }
 
-const InsightPanel = ({ phase = 'idle', votes = {}, verdict = null }) => {
-  const totalVotes = Object.values(votes).reduce((sum, value) => sum + value, 0)
-  const showVotes = phase === 'voting' || phase === 'judging'
-
+const InsightPanel = ({ phase = 'idle', verdict = null, resolution = '' }) => {
   return (
-    <div className="space-y-5">
+    <div className="flex h-full min-h-0 flex-col gap-5 overflow-y-auto pr-2 [scrollbar-color:rgba(148,163,184,0.45)_transparent] [scrollbar-width:thin]">
       <GlassPanel className="p-5">
         <div className="flex items-center gap-3">
           <div className="rounded-2xl bg-cyan-400/10 p-3 text-cyan-300">
@@ -44,36 +40,18 @@ const InsightPanel = ({ phase = 'idle', votes = {}, verdict = null }) => {
       <GlassPanel className="p-5">
         <div className="flex items-center gap-3">
           <div className="rounded-2xl bg-blue-500/10 p-3 text-blue-300">
-            <Vote className="h-5 w-5" />
+            <Gavel className="h-5 w-5" />
           </div>
           <div>
-            <p className="text-xs uppercase tracking-[0.24em] text-slate-400">Votes</p>
-            <h3 className="mt-1 text-lg font-semibold text-white">Resolution alignment</h3>
+            <p className="text-xs uppercase tracking-[0.24em] text-slate-400">Moderator Verdict</p>
+            <h3 className="mt-1 text-lg font-semibold text-white">Final committee conclusion</h3>
           </div>
         </div>
 
-        <div className="mt-5 space-y-4">
-          {showVotes && totalVotes > 0 ? (
-            Object.entries(votes).map(([label, count]) => {
-              const width = totalVotes ? `${(count / totalVotes) * 100}%` : '0%'
-              return (
-                <div key={label} className="space-y-2">
-                  <div className="flex items-center justify-between text-sm">
-                    <span className="capitalize text-slate-300">{label}</span>
-                    <span className="font-semibold text-white">{count}</span>
-                  </div>
-                  <div className="h-2 rounded-full bg-slate-800">
-                    <div
-                      className="h-2 rounded-full bg-gradient-to-r from-blue-500 to-cyan-400"
-                      style={{ width }}
-                    />
-                  </div>
-                </div>
-              )
-            })
-          ) : (
-            <p className="text-sm leading-6 text-slate-400">Vote bars will populate once the chamber enters voting.</p>
-          )}
+        <div className="mt-5 rounded-[1.5rem] border border-white/10 bg-slate-900 p-4">
+          <p className="text-sm leading-6 text-slate-300">
+            {resolution || 'The moderator conclusion will appear here once the draft resolution is finalized.'}
+          </p>
         </div>
       </GlassPanel>
 
@@ -98,26 +76,6 @@ const InsightPanel = ({ phase = 'idle', votes = {}, verdict = null }) => {
               {verdict?.winner || 'Pending final committee judgment'}
             </p>
           </div>
-        </div>
-      </GlassPanel>
-
-      <GlassPanel className="p-5">
-        <div className="flex items-center gap-3">
-          <div className="rounded-2xl bg-white/5 p-3 text-slate-200">
-            <Layers3 className="h-5 w-5" />
-          </div>
-          <div>
-            <p className="text-xs uppercase tracking-[0.24em] text-slate-400">MCP Context</p>
-            <h3 className="mt-1 text-lg font-semibold text-white">Support signals</h3>
-          </div>
-        </div>
-
-        <div className="mt-5 grid gap-3">
-          {mockMcpContext.contextItems.map((item) => (
-            <div key={item} className="rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-slate-300">
-              {item}
-            </div>
-          ))}
         </div>
       </GlassPanel>
     </div>

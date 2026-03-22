@@ -22,7 +22,7 @@ const statusStyles = {
 
 const CountryPanel = ({ countries, activeSpeaker }) => {
   return (
-    <GlassPanel className="h-full p-5">
+    <GlassPanel className="flex h-full min-h-0 flex-col overflow-hidden p-5">
       <div className="flex items-center justify-between">
         <div>
           <p className="text-xs uppercase tracking-[0.28em] text-slate-400">Country Panel</p>
@@ -33,7 +33,7 @@ const CountryPanel = ({ countries, activeSpeaker }) => {
         </div>
       </div>
 
-      <div className="mt-6 space-y-3">
+      <div className="mt-6 min-h-0 flex-1 space-y-3 overflow-y-auto pr-2 [scrollbar-color:rgba(148,163,184,0.45)_transparent] [scrollbar-width:thin]">
         {countries.map((country) => {
           const style = statusStyles[country.status] || statusStyles.waiting
           const isActiveSpeaker = country.name === activeSpeaker

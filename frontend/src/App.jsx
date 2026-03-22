@@ -1,6 +1,6 @@
 import React from 'react'
-import Dashboard from './Dashboard'
 import Landing from './Landing'
+import Dashboard from './pages/Dashboard'
 
 function App() {
   const [view, setView] = React.useState('landing')
