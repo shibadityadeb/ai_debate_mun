@@ -1,18 +1,17 @@
-"""Orchestrator for debate flow."""
 
 import asyncio
 import random
 from typing import List, Dict, Optional
-
 from app.agents.country_agent import CountryAgent
 from app.agents.judge_agent import JudgeAgent
 from app.agents.moderator_agent import ModeratorAgent
 from app.memory.context_builder import build_context
 from app.memory.state_store import DebateState, DebateMessage
+from app.mcp.retriever import Retriever
 
 
 class DebateOrchestrator:
-    """Orchestrates a multi-agent UN-style debate."""
+    
 
     def __init__(
         self,
@@ -20,11 +19,13 @@ class DebateOrchestrator:
         moderator: ModeratorAgent,
         judge: JudgeAgent,
         state: DebateState,
+        retriever: Optional[Retriever] = None,
     ):
         self.agents = agents
         self.moderator = moderator
         self.judge = judge
         self.state = state
+        self.retriever = retriever or Retriever()
 
     def initialize_debate(self, topic: str, countries: List[str]) -> None:
         """Initialize debate state."""
@@ -49,9 +50,15 @@ class DebateOrchestrator:
     async def run_opening_round(self) -> None:
         """Run opening statements from all agents."""
         self.state.current_round = "opening"
+        retrieved_context = self.retriever.get_context(self.state.topic)
 
         for agent in self.agents:
-            context = build_context(self.state, agent.name, "opening")
+            context = build_context(
+                self.state,
+                agent.name,
+                "opening",
+                retrieved_context=retrieved_context,
+            )
             response = await self._ask_agent(agent, context)
             text = self._normalize_response(response)
 
@@ -62,9 +69,15 @@ class DebateOrchestrator:
         """Run rebuttal rounds where agents respond strategically to opponents."""
         for i in range(rounds):
             self.state.current_round = f"rebuttal-{i+1}"
+            retrieved_context = self.retriever.get_context(self.state.topic)
             tasks = []
             for agent in self.agents:
-                context = build_context(self.state, agent.name, "rebuttal")
+                context = build_context(
+                    self.state,
+                    agent.name,
+                    "rebuttal",
+                    retrieved_context=retrieved_context,
+                )
                 tasks.append((agent, self._ask_agent(agent, context)))
 
             results = []
@@ -80,7 +93,13 @@ class DebateOrchestrator:
     async def run_resolution_phase(self) -> None:
         """Generate final resolution from moderator."""
         self.state.current_round = "resolution"
-        context = build_context(self.state, "Moderator", "resolution")
+        retrieved_context = self.retriever.get_context(self.state.topic)
+        context = build_context(
+            self.state,
+            "Moderator",
+            "resolution",
+            retrieved_context=retrieved_context,
+        )
         response = await self._ask_agent(self.moderator, context)
         text = self._normalize_response(response)
 
@@ -105,7 +124,13 @@ class DebateOrchestrator:
     async def run_judging_phase(self) -> Dict[str, str]:
         """Judge evaluates the debate and returns score and reasoning."""
         self.state.current_round = "judging"
-        context = build_context(self.state, "Judge", "judging")
+        retrieved_context = self.retriever.get_context(self.state.topic)
+        context = build_context(
+            self.state,
+            "Judge",
+            "judging",
+            retrieved_context=retrieved_context,
+        )
         response = await self._ask_agent(self.judge, context)
         text = self._normalize_response(response)
 
@@ -118,6 +143,8 @@ class DebateOrchestrator:
 
     async def run_full_debate(self) -> DebateState:
         """Run full debate sequence and return final state."""
+        await self.retriever.fetch_and_store(self.state.topic)
+
         await self.run_opening_round()
         await self.run_rebuttal_round(rounds=2)
         await self.run_resolution_phase()

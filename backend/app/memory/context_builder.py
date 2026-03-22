@@ -15,13 +15,21 @@ def _truncate_text(text: str, max_chars: int) -> str:
     return text[: max_chars - 3].rstrip() + "..."
 
 
-def build_context(state: DebateState, agent_name: str, phase: str, history_limit: int = 6, max_length: int = 1200) -> str:
+def build_context(
+    state: DebateState,
+    agent_name: str,
+    phase: str,
+    retrieved_context: str = "",
+    history_limit: int = 6,
+    max_length: int = 1200,
+) -> str:
     """Generate agent prompt context from debate state.
 
     Args:
         state: Current debate state.
         agent_name: Agent receiving context.
         phase: Current debate phase (e.g., opening, rebuttal).
+        retrieved_context: Real-world knowledge to inject into context.
         history_limit: Number of recent messages to include.
         max_length: Maximum total characters for the generated context.
 
@@ -59,6 +67,10 @@ def build_context(state: DebateState, agent_name: str, phase: str, history_limit
     ]
 
     sections += history_lines
+
+    if retrieved_context:
+        sections += ["", "REAL-WORLD CONTEXT:", retrieved_context]
+
     sections += ["", *instructions]
 
     context = "\n".join(sections)
