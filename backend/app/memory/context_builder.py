@@ -20,6 +20,7 @@ def build_context(
     agent_name: str,
     phase: str,
     retrieved_context: str = "",
+    relationships: Optional[Dict[str, Dict[str, List[str]]]] = None,
     history_limit: int = 6,
     max_length: int = 1200,
 ) -> str:
@@ -30,6 +31,7 @@ def build_context(
         agent_name: Agent receiving context.
         phase: Current debate phase (e.g., opening, rebuttal).
         retrieved_context: Real-world knowledge to inject into context.
+        relationships: Optional alliances/conflicts mapping.
         history_limit: Number of recent messages to include.
         max_length: Maximum total characters for the generated context.
 
@@ -67,6 +69,28 @@ def build_context(
     ]
 
     sections += history_lines
+
+    if relationships:
+        alliances = relationships.get("alliances", {})
+        conflicts = relationships.get("conflicts", {})
+
+        sections.append("")
+        sections.append("ALLIANCES:")
+        if alliances:
+            for country, allies in alliances.items():
+                for ally in allies:
+                    sections.append(f"- {country} supports {ally}")
+        else:
+            sections.append("- No explicit alliances detected.")
+
+        sections.append("")
+        sections.append("CONFLICTS:")
+        if conflicts:
+            for country, opponents in conflicts.items():
+                for opponent in opponents:
+                    sections.append(f"- {country} opposes {opponent}")
+        else:
+            sections.append("- No explicit conflicts detected.")
 
     if retrieved_context:
         sections += ["", "REAL-WORLD CONTEXT:", retrieved_context]
