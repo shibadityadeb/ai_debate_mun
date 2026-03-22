@@ -21,19 +21,30 @@ const fetchAPI = async (endpoint, options = {}) => {
       ...options,
     });
 
-    // Parse response
-    const data = await response.json();
+    const contentType = response.headers.get('content-type') || '';
+    const isJson = contentType.includes('application/json');
+    const data = isJson ? await response.json() : await response.text();
 
     // Check for HTTP error status
     if (!response.ok) {
-      const errorMsg = data.detail || data.message || `HTTP Error: ${response.status}`;
+      const errorMsg =
+        (isJson && (data.detail || data.message)) ||
+        (typeof data === 'string' && data.trim()) ||
+        `HTTP Error: ${response.status}`;
       throw new Error(errorMsg);
     }
 
     return data;
   } catch (error) {
-    console.error('[API Error]', error.message);
-    throw error;
+    const isNetworkError = error instanceof TypeError;
+    const normalizedError = isNetworkError
+      ? new Error(
+          'Network request failed. If this is the deployed app, verify the backend is reachable and that CORS allows this frontend origin.'
+        )
+      : error;
+
+    console.error('[API Error]', normalizedError.message);
+    throw normalizedError;
   }
 };
 
