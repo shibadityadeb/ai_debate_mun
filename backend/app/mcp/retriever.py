@@ -6,7 +6,6 @@ import logging
 from typing import Dict, List, Optional
 
 from duckduckgo_search import DDGS
-from newspaper import Article
 
 from app.mcp.vector_store import VectorStore
 
@@ -26,6 +25,14 @@ class Retriever:
     @staticmethod
     def _extract_article_content(url: str) -> str:
         """Synchronously download and parse an article with newspaper3k."""
+        try:
+            from newspaper import Article
+        except ImportError as exc:
+            raise RuntimeError(
+                "Article parsing dependencies are unavailable. Install newspaper3k extras, "
+                "including lxml_html_clean, to enable retrieval."
+            ) from exc
+
         article = Article(url)
         article.download()
         article.parse()
@@ -112,4 +119,3 @@ class Retriever:
             return joined
 
         return joined[:max_length].rsplit(" ", 1)[0] + "..."
-
