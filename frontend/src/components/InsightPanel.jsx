@@ -77,15 +77,29 @@ const InsightPanel = ({ phase = 'idle', votes = {}, verdict = null }) => {
             <h4 className="card-title">⚖️ Final Verdict</h4>
           </div>
           <div className="verdict-content">
-            <p className="verdict-text">
-              Debate concluded with balanced perspectives across all participants.
-            </p>
-            <div className="verdict-highlight">
-              <p className="verdict-label">Key Outcome</p>
-              <p className="verdict-outcome">
-                Collaborative approach with mutual understanding
-              </p>
-            </div>
+            {verdict && verdict.winner ? (
+              <>
+                <p className="verdict-text">
+                  {verdict.reasoning || 'Debate concluded with balanced perspectives.'}
+                </p>
+                <div className="verdict-highlight">
+                  <p className="verdict-label">Winner</p>
+                  <p className="verdict-outcome">{verdict.winner}</p>
+                </div>
+              </>
+            ) : (
+              <>
+                <p className="verdict-text">
+                  Debate concluded with balanced perspectives across all participants.
+                </p>
+                <div className="verdict-highlight">
+                  <p className="verdict-label">Key Outcome</p>
+                  <p className="verdict-outcome">
+                    Collaborative approach with mutual understanding
+                  </p>
+                </div>
+              </>
+            )}
           </div>
         </div>
       )}

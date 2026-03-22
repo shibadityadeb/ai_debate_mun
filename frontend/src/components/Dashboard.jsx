@@ -20,6 +20,10 @@ const Dashboard = () => {
   const [phase, setPhase] = useState('idle');
   const [votes, setVotes] = useState({ yes: 0, no: 0, abstain: 0 });
   const [verdict, setVerdictData] = useState(null);
+  const [participants, setParticipants] = useState(() => 
+    mockCountries.map(c => ({ ...c, status: 'waiting' }))
+  );
+  const [spokenCountries, setSpokenCountries] = useState(new Set());
 
   const phases = ['opening', 'rebuttal-1', 'rebuttal-2', 'resolution', 'voting', 'judging'];
   const phaseLabels = {
@@ -31,6 +35,21 @@ const Dashboard = () => {
     'resolution': 'Resolution',
     'voting': 'Voting Round',
     'judging': 'Final Judgment'
+  };
+
+  // Update participant status based on speaking state
+  const updateParticipantStatus = (speaker, spoken) => {
+    setParticipants(prevParticipants => 
+      prevParticipants.map(country => {
+        if (country.name === speaker) {
+          return { ...country, status: 'speaking' };
+        } else if (spoken.has(country.name)) {
+          return { ...country, status: 'active' };
+        } else {
+          return { ...country, status: 'waiting' };
+        }
+      })
+    );
   };
 
   const handleStartDebate = async (topic) => {
@@ -46,6 +65,8 @@ const Dashboard = () => {
     setActiveSpeaker('');
     setVotes({ yes: 0, no: 0, abstain: 0 });
     setVerdictData(null);
+    setSpokenCountries(new Set());
+    setParticipants(mockCountries.map(c => ({ ...c, status: 'waiting' })));
 
     try {
       console.log('📡 Calling API with topic:', topic);
@@ -57,6 +78,16 @@ const Dashboard = () => {
 
       // Generate messages with streaming simulation
       if (response.history && Array.isArray(response.history)) {
+        // Extract judge verdict if available
+        const judgeMessage = response.history.find(msg => msg.role === 'judging');
+        if (judgeMessage && judgeMessage.content) {
+          try {
+            const verdictData = JSON.parse(judgeMessage.content);
+            setVerdictData(verdictData);
+          } catch (e) {
+            console.warn('Could not parse judge verdict:', e);
+          }
+        }
         simulateDebateRounds(response.history, response.final_state);
         setCurrentTopic(topic);
       }
@@ -120,6 +151,16 @@ const Dashboard = () => {
             
             setMessages((prev) => [...prev, transformedMsg]);
             setActiveSpeaker(msg.agent || '');
+            
+            // Update spoken countries and participant status
+            setSpokenCountries((prevSpoken) => {
+              const updated = new Set(prevSpoken);
+              if (msg.agent && msg.agent !== 'Moderator' && msg.agent !== 'Judge') {
+                updated.add(msg.agent);
+              }
+              updateParticipantStatus(msg.agent, updated);
+              return updated;
+            });
           }, totalDelay);
         });
       }
@@ -134,6 +175,13 @@ const Dashboard = () => {
         if (finalState.votes) {
           setVotes(finalState.votes);
         }
+        // Keep participants in their final active state
+        setParticipants(prevParticipants => 
+          prevParticipants.map(country => ({
+            ...country,
+            status: spokenCountries.has(country.name) ? 'active' : 'waiting'
+          }))
+        );
         setPhase('judging');
         setIsLoading(false);
       }, totalDelay);
@@ -157,7 +205,7 @@ const Dashboard = () => {
         <div className="dashboard-container">
           {/* Left Sidebar */}
           <aside className="dashboard-sidebar-left">
-            <CountryPanel countries={mockCountries} activeSpeaker={activeSpeaker} />
+            <CountryPanel countries={participants} activeSpeaker={activeSpeaker} />
           </aside>
 
           {/* Center Content */}
