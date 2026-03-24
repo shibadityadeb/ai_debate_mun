@@ -6,7 +6,7 @@
 
 ## 🎯 Overview
 
-Diplomatrix AI is a sophisticated **multi-agent orchestration system** that simulates realistic diplomatic debates. Five independent country agents represent different nations, while a moderator agent synthesizes positions and a judge agent scores arguments. The entire debate flow is orchestrated through a state-driven system that manages agent coordination, message streaming, and real-time UI updates.
+Diplomatrix AI is a sophisticated **multi-agent orchestration system** that simulates realistic diplomatic debates. Five independent country agents represent different nations, while a moderator agent synthesizes positions and a judge agent scores arguments. The entire debate flow is orchestrated through a state driven system that manages agent coordination, message streaming, and real time UI updates.
 
 ### Agent Orchestra Architecture
 
