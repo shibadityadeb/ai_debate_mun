@@ -115,7 +115,6 @@ For local setup: `chmod +x setup.sh && ./setup.sh`
 
 ## 📚 Documentation
 
-- **[DEPLOYMENT.md](./DEPLOYMENT.md)** - Step-by-step guide to deploy on Render + Vercel
 - **[API_REFERENCE.md](./API_REFERENCE.md)** - Complete API documentation with examples
 - **[LICENSE](./LICENSE)** - MIT License
 
